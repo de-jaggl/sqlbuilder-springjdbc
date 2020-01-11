@@ -1,7 +1,5 @@
 package de.jaggl.sqlbuilder.springjdbc.builders;
 
-import static java.util.Collections.emptyList;
-
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -28,6 +26,6 @@ public class DeleteFromDeleteBuilder extends UpdateFromQueryBuilder
     @Override
     protected List<Integer> getPlaceholderSqlTypes()
     {
-        return delete.getWhere() != null ? delete.getWhere().getPlaceholderSqlTypes() : emptyList();
+        return delete.getWhere() != null ? delete.getWhere().getPlaceholderSqlTypes() : null;
     }
 }
