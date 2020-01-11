@@ -6,14 +6,29 @@ on:
       - master
 
 jobs:
-  build:
+  release:
+    env:
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
-
     steps:
       - name: setup-java
         uses: actions/setup-java@v1
         with:
           java-version: 11
+          settings-path: /tmp
+
+      - name: setup-gpg
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: echo ${GPG_PRIVATE_KEY} | base64 --decode | gpg --batch --import
+
+      - name: setup-maven-settings
+        uses: s4u/maven-settings-action@v1
+        with:
+          servers: '[{"id": "ossrh", "username": "${OSSRH_USERNAME}", "password": "${OSSRH_PASSWORD}"}, {"id": "github", "username": "x-access-token", "password": "${GITHUB_TOKEN}"}]'
+          properties: '[{"gpg.executable": "gpg"}, {"gpg.passphrase": "${GPG_PASSPHRASE}"}]'
+          sonatypeSnapshots: true
 
       - name: checkout
         uses: actions/checkout@v1
@@ -25,18 +40,13 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
 
-      - name: compile
-        run: mvn clean compile test-compile
-
-      - name: unit-tests
-        run: mvn surefire:test
-
-      - name: integration-tests
-        run: mvn -DskipUTs -Dgpg.skip=true jacoco:restore-instrumented-classes verify
+      - name: deploy
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        run: mvn clean verify deploy
 
       - name: sonar-analyse
-        env:		
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mvn sonar:sonar \
             -Dsonar.host.url=https://sonarcloud.io/ \
@@ -44,5 +54,3 @@ jobs:
             -Dsonar.organization=de-jaggl \
             -Dsonar.projectKey=de-jaggl_sqlbuilder-springjdbc \
             -Dsonar.java.binaries=./target/classes
-      - name: pom-analyse
-        run: mvn enforcer:enforce
