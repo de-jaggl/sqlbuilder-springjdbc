@@ -42,7 +42,7 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io/ \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.organization=de-jaggl \
-            -Dsonar.projectKey=de-jaggl_sqlbuilder \
+            -Dsonar.projectKey=de-jaggl_sqlbuilder-springjdbc \
             -Dsonar.java.binaries=./target/classes
       - name: pom-analyse
         run: mvn enforcer:enforce
