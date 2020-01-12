@@ -7,6 +7,11 @@ import javax.sql.DataSource;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.object.SqlQuery;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 public class SingletonRowMapperSqlQuery<T> extends SqlQuery<T>
 {
     private final RowMapper<T> rowMapper;

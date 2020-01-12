@@ -12,6 +12,11 @@ import org.springframework.jdbc.object.SqlUpdate;
 import de.jaggl.sqlbuilder.dialect.Dialect;
 import lombok.AllArgsConstructor;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 @AllArgsConstructor(access = PROTECTED)
 public abstract class UpdateFromQueryBuilder
 {

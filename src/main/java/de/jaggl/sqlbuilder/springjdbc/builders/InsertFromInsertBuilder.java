@@ -9,6 +9,11 @@ import javax.sql.DataSource;
 import de.jaggl.sqlbuilder.dialect.Dialect;
 import de.jaggl.sqlbuilder.queries.Insert;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 public class InsertFromInsertBuilder extends UpdateFromQueryBuilder
 {
     private final Insert insert;

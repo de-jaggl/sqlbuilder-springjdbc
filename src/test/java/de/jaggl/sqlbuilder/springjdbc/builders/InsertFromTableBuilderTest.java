@@ -1,11 +1,12 @@
 package de.jaggl.sqlbuilder.springjdbc.builders;
 
-import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.insert;
+import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.insert;
 import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.insertBuilder;
 import static java.lang.Boolean.TRUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.easymock.EasyMock.expect;
 import static org.powermock.api.easymock.PowerMock.createNiceMock;
+import static org.powermock.api.easymock.PowerMock.createStrictMock;
 import static org.powermock.api.easymock.PowerMock.replayAll;
 import static org.powermock.api.easymock.PowerMock.verifyAll;
 
@@ -21,6 +22,7 @@ import de.jaggl.sqlbuilder.columns.number.integer.BigIntColumn;
 import de.jaggl.sqlbuilder.columns.string.VarCharColumn;
 import de.jaggl.sqlbuilder.schema.Schema;
 import de.jaggl.sqlbuilder.schema.Table;
+import de.jaggl.sqlbuilder.springjdbc.builders.utils.ParamSource;
 
 class InsertFromTableBuilderTest
 {
@@ -47,11 +49,14 @@ class InsertFromTableBuilderTest
     void testBuild() throws SQLException
     {
         var dataSource = getDataSourceMock();
+        var paramSource = getParamSourceMock();
 
         replayAll();
-        var simpleJdbcInsert = insert(TABLE, dataSource);
-        assertThat(simpleJdbcInsert.getInsertString()).isEqualTo("INSERT INTO schema.table (column2, column3, column4) VALUES(?, ?, ?)");
-        assertThat(simpleJdbcInsert.getGeneratedKeyNames()).containsExactly("column1");
+        var simpleInsert = insert(TABLE, dataSource, paramSource);
+        assertThat(simpleInsert.simpleJdbcInsert.getInsertString()).isEqualTo("INSERT INTO schema.table (column2, column3, column4) VALUES(?, ?, ?)");
+        assertThat(simpleInsert.simpleJdbcInsert.getGeneratedKeyNames()).containsExactly("column1");
+        assertThat(simpleInsert.paramSource).isSameAs(paramSource);
+        assertThat(simpleInsert.considerKey).isTrue();
         verifyAll();
     }
 
@@ -109,11 +114,14 @@ class InsertFromTableBuilderTest
     void testBuildWithoutAutoIncrementColumns() throws SQLException
     {
         var dataSource = getDataSourceMock();
+        var paramSource = getParamSourceMock();
 
         replayAll();
-        var simpleJdbcInsert = insert(TABLE2, dataSource);
-        assertThat(simpleJdbcInsert.getInsertString()).isEqualTo("INSERT INTO table2 (column5) VALUES(?)");
-        assertThat(simpleJdbcInsert.getGeneratedKeyNames()).isEmpty();
+        var simpleInsert = insert(TABLE2, dataSource, paramSource);
+        assertThat(simpleInsert.simpleJdbcInsert.getInsertString()).isEqualTo("INSERT INTO table2 (column5) VALUES(?)");
+        assertThat(simpleInsert.simpleJdbcInsert.getGeneratedKeyNames()).isEmpty();
+        assertThat(simpleInsert.paramSource).isSameAs(paramSource);
+        assertThat(simpleInsert.considerKey).isFalse();
         verifyAll();
     }
 
@@ -131,5 +139,10 @@ class InsertFromTableBuilderTest
         expect(Boolean.valueOf(metaData.supportsGetGeneratedKeys())).andReturn(TRUE).anyTimes();
 
         return dataSource;
+    }
+
+    private static <T> ParamSource<T> getParamSourceMock()
+    {
+        return createStrictMock(ParamSource.class);
     }
 }

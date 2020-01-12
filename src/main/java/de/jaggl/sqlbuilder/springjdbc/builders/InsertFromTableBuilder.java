@@ -14,6 +14,11 @@ import de.jaggl.sqlbuilder.columns.Column;
 import de.jaggl.sqlbuilder.schema.Table;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 @RequiredArgsConstructor(access = PACKAGE)
 public class InsertFromTableBuilder
 {
@@ -98,14 +103,18 @@ public class InsertFromTableBuilder
         {
             result = excludedColumns.stream().noneMatch(col -> col == column);
         }
-        if (column.getColumnDefinition().isAutoIncrement() && settingAutoIncrementColumns != null)
+        if (column.getColumnDefinition().isAutoIncrement())
         {
-            return settingAUtoIncrementColumnsContainColumn(column);
+            if (settingAutoIncrementColumns != null)
+            {
+                return settingAutoIncrementColumnsContainColumn(column);
+            }
+            return false;
         }
         return result;
     }
 
-    private boolean settingAUtoIncrementColumnsContainColumn(Column column)
+    private boolean settingAutoIncrementColumnsContainColumn(Column column)
     {
         return settingAutoIncrementColumns.stream().anyMatch(col -> col == column);
     }

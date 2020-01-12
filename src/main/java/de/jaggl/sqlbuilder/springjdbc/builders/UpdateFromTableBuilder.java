@@ -22,6 +22,11 @@ import de.jaggl.sqlbuilder.domain.Placeholder;
 import de.jaggl.sqlbuilder.schema.Table;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 @RequiredArgsConstructor(access = PACKAGE)
 public class UpdateFromTableBuilder
 {

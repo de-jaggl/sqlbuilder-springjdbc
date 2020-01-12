@@ -2,13 +2,14 @@ package de.jaggl.sqlbuilder.springjdbc.builders;
 
 import static de.jaggl.sqlbuilder.dialect.Dialects.MYSQL;
 import static de.jaggl.sqlbuilder.domain.Placeholder.placeholder;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.update;
+import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.update;
 import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.updateBuilder;
 import static java.lang.Boolean.TRUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.easymock.EasyMock.expect;
 import static org.powermock.api.easymock.PowerMock.createNiceMock;
+import static org.powermock.api.easymock.PowerMock.createStrictMock;
 import static org.powermock.api.easymock.PowerMock.replayAll;
 import static org.powermock.api.easymock.PowerMock.verifyAll;
 
@@ -24,6 +25,7 @@ import de.jaggl.sqlbuilder.columns.number.integer.BigIntColumn;
 import de.jaggl.sqlbuilder.columns.string.VarCharColumn;
 import de.jaggl.sqlbuilder.schema.Schema;
 import de.jaggl.sqlbuilder.schema.Table;
+import de.jaggl.sqlbuilder.springjdbc.builders.utils.ParamSource;
 
 public class UpdateFromTableBuilderTest
 {
@@ -50,12 +52,13 @@ public class UpdateFromTableBuilderTest
     void testSqlUpdate() throws SQLException
     {
         var dataSource = getDataSourceMock();
+        var paramSource = getParamSourceMock();
 
         replayAll();
-        var sqlUpdate = update(TABLE, dataSource);
+        var sqlUpdate = update(TABLE, dataSource, paramSource);
         verifyAll();
 
-        assertThat(sqlUpdate.getSql())
+        assertThat(sqlUpdate.sqlUpdate.getSql())
                 .isEqualTo("UPDATE `schema`.`table` SET `schema`.`table`.`column2` = :column2, `schema`.`table`.`column3` = :column3, `schema`.`table`.`column4` = :column4 WHERE `schema`.`table`.`column1` = :column1");
     }
 
@@ -63,12 +66,13 @@ public class UpdateFromTableBuilderTest
     void testSqlUpdateWithDialect() throws SQLException
     {
         var dataSource = getDataSourceMock();
+        var paramSource = getParamSourceMock();
 
         replayAll();
-        var sqlUpdate = update(TABLE, dataSource, MYSQL);
+        var sqlUpdate = update(TABLE, dataSource, MYSQL, paramSource);
         verifyAll();
 
-        assertThat(sqlUpdate.getSql())
+        assertThat(sqlUpdate.sqlUpdate.getSql())
                 .isEqualTo("UPDATE `schema`.`table` SET `schema`.`table`.`column2` = :column2, `schema`.`table`.`column3` = :column3, `schema`.`table`.`column4` = :column4 WHERE `schema`.`table`.`column1` = :column1");
     }
 
@@ -76,12 +80,13 @@ public class UpdateFromTableBuilderTest
     void testSqlUpdateWithDialectName() throws SQLException
     {
         var dataSource = getDataSourceMock();
+        var paramSource = getParamSourceMock();
 
         replayAll();
-        var sqlUpdate = update(TABLE, dataSource, "MYSQL");
+        var sqlUpdate = update(TABLE, dataSource, "MYSQL", paramSource);
         verifyAll();
 
-        assertThat(sqlUpdate.getSql())
+        assertThat(sqlUpdate.sqlUpdate.getSql())
                 .isEqualTo("UPDATE `schema`.`table` SET `schema`.`table`.`column2` = :column2, `schema`.`table`.`column3` = :column3, `schema`.`table`.`column4` = :column4 WHERE `schema`.`table`.`column1` = :column1");
     }
 
@@ -104,7 +109,7 @@ public class UpdateFromTableBuilderTest
         var dataSource = getDataSourceMock();
 
         replayAll();
-        var sqlUpdate = updateBuilder(TABLE, dataSource, "MYSQL").withoutPlaceholderNames().build();
+        var sqlUpdate = updateBuilder(TABLE, dataSource).withoutPlaceholderNames().build();
         verifyAll();
 
         assertThat(sqlUpdate.getSql())
@@ -128,9 +133,10 @@ public class UpdateFromTableBuilderTest
     void testBuildWithoutAutoIncrementColumns() throws SQLException
     {
         var dataSource = getDataSourceMock();
+        var paramSource = getParamSourceMock();
 
         replayAll();
-        assertThatThrownBy(() -> update(TABLE3, dataSource, "MYSQL")).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> update(TABLE3, dataSource, "MYSQL", paramSource)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("the table must exactly have 1 autoIncrement-column, but 0 were found");
         verifyAll();
     }
@@ -139,9 +145,10 @@ public class UpdateFromTableBuilderTest
     void testBuildWithMultipleAutoIncrementColumns() throws SQLException
     {
         var dataSource = getDataSourceMock();
+        var paramSource = getParamSourceMock();
 
         replayAll();
-        assertThatThrownBy(() -> update(TABLE2, dataSource, "MYSQL")).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> update(TABLE2, dataSource, "MYSQL", paramSource)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("the table must exactly have 1 autoIncrement-column, but 2 were found");
         verifyAll();
     }
@@ -212,5 +219,10 @@ public class UpdateFromTableBuilderTest
         expect(Boolean.valueOf(metaData.supportsGetGeneratedKeys())).andReturn(TRUE).anyTimes();
 
         return dataSource;
+    }
+
+    private static <T> ParamSource<T> getParamSourceMock()
+    {
+        return createStrictMock(ParamSource.class);
     }
 }

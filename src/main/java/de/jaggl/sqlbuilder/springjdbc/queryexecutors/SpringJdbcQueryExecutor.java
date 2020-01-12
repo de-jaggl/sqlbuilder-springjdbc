@@ -1,15 +1,22 @@
 package de.jaggl.sqlbuilder.springjdbc.queryexecutors;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 
 import de.jaggl.sqlbuilder.dialect.Dialect;
 import de.jaggl.sqlbuilder.queries.ExecutableQuery;
+import de.jaggl.sqlbuilder.queries.Insert;
 import de.jaggl.sqlbuilder.queries.UpdatebleQuery;
 import de.jaggl.sqlbuilder.queryexecutor.QueryExecutor;
 import de.jaggl.sqlbuilder.queryexecutor.RowExtractor;
 import de.jaggl.sqlbuilder.queryexecutor.SelectQueryExecutor;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 @RequiredArgsConstructor
 public class SpringJdbcQueryExecutor implements QueryExecutor
 {
@@ -41,9 +48,17 @@ public class SpringJdbcQueryExecutor implements QueryExecutor
     }
 
     @Override
-    public int execute(UpdatebleQuery updatebleQuery)
+    public long execute(UpdatebleQuery updatebleQuery)
     {
         return jdbcTemplate.update(updatebleQuery.build(dialect));
+    }
+
+    @Override
+    public long executeAndReturnKey(Insert insert)
+    {
+        var keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(new InsertPreparedStatementCreator(insert.build(dialect)), keyHolder);
+        return keyHolder.getKey().longValue();
     }
 
     @Override

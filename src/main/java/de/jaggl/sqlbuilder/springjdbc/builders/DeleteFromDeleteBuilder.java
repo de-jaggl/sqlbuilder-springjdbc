@@ -7,6 +7,11 @@ import javax.sql.DataSource;
 import de.jaggl.sqlbuilder.dialect.Dialect;
 import de.jaggl.sqlbuilder.queries.Delete;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 public class DeleteFromDeleteBuilder extends UpdateFromQueryBuilder
 {
     private final Delete delete;

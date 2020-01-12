@@ -14,6 +14,11 @@ import de.jaggl.sqlbuilder.queries.Query;
 import de.jaggl.sqlbuilder.queryexecutor.SelectQueryExecutor;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 @RequiredArgsConstructor
 public class SpringJdbcSelectQueryExecutor<T> implements SelectQueryExecutor<T>
 {

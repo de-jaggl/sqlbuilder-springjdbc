@@ -2,9 +2,9 @@ package de.jaggl.sqlbuilder.springjdbc.builders;
 
 import static de.jaggl.sqlbuilder.dialect.Dialects.MYSQL;
 import static de.jaggl.sqlbuilder.domain.Placeholder.placeholder;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.selectAll;
+import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.selectAll;
+import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.selectOne;
 import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.selectBuilder;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.selectOne;
 import static java.lang.Boolean.TRUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -56,7 +56,7 @@ public class SelectFromTableBuilderTest
         var select = selectOne(TABLE, dataSource, (rs, rowNum) -> rs.getString("column1"));
         verifyAll();
 
-        assertThat(select.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = :column1");
+        assertThat(select.sqlQuery.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = ?");
     }
 
     @Test
@@ -68,7 +68,7 @@ public class SelectFromTableBuilderTest
         var select = selectAll(TABLE, dataSource, (rs, rowNum) -> rs.getString("column1"));
         verifyAll();
 
-        assertThat(select.getSql()).isEqualTo("SELECT * FROM `schema`.`table`");
+        assertThat(select.sqlQuery.getSql()).isEqualTo("SELECT * FROM `schema`.`table`");
     }
 
     @Test
@@ -80,7 +80,7 @@ public class SelectFromTableBuilderTest
         var select = selectOne(TABLE, dataSource, MYSQL, (rs, rowNum) -> rs.getString("column1"));
         verifyAll();
 
-        assertThat(select.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = :column1");
+        assertThat(select.sqlQuery.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = ?");
     }
 
     @Test
@@ -92,7 +92,7 @@ public class SelectFromTableBuilderTest
         var select = selectOne(TABLE, dataSource, MYSQL, (rs, rowNum) -> rs.getString("column1"));
         verifyAll();
 
-        assertThat(select.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = :column1");
+        assertThat(select.sqlQuery.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = ?");
     }
 
     @Test
@@ -104,7 +104,7 @@ public class SelectFromTableBuilderTest
         var select = selectOne(TABLE, dataSource, "MYSQL", (rs, rowNum) -> rs.getString("column1"));
         verifyAll();
 
-        assertThat(select.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = :column1");
+        assertThat(select.sqlQuery.getSql()).isEqualTo("SELECT * FROM `schema`.`table` WHERE `schema`.`table`.`column1` = ?");
     }
 
     @Test
@@ -116,7 +116,7 @@ public class SelectFromTableBuilderTest
         var select = selectAll(TABLE, dataSource, "MYSQL", (rs, rowNum) -> rs.getString("column1"));
         verifyAll();
 
-        assertThat(select.getSql()).isEqualTo("SELECT * FROM `schema`.`table`");
+        assertThat(select.sqlQuery.getSql()).isEqualTo("SELECT * FROM `schema`.`table`");
     }
 
     @Test

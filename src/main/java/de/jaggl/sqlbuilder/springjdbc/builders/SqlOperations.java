@@ -5,7 +5,6 @@ import static lombok.AccessLevel.PRIVATE;
 import javax.sql.DataSource;
 
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.object.SqlQuery;
 import org.springframework.jdbc.object.SqlUpdate;
 
@@ -17,6 +16,11 @@ import de.jaggl.sqlbuilder.queries.Update;
 import de.jaggl.sqlbuilder.schema.Table;
 import lombok.NoArgsConstructor;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 @NoArgsConstructor(access = PRIVATE)
 public class SqlOperations
 {
@@ -33,36 +37,6 @@ public class SqlOperations
     public static <T> SqlQuery<T> select(Select select, DataSource dataSource, RowMapper<T> rowMapper)
     {
         return select(select, dataSource, Dialect.getDefault(), rowMapper);
-    }
-
-    public static <T> SqlQuery<T> selectAll(Table table, DataSource dataSource, Dialect dialect, RowMapper<T> rowMapper)
-    {
-        return selectBuilder(table, dataSource, dialect, rowMapper).buildSelectAllAndCompile();
-    }
-
-    public static <T> SqlQuery<T> selectAll(Table table, DataSource dataSource, String dialectName, RowMapper<T> rowMapper)
-    {
-        return selectAll(table, dataSource, Dialect.forName(dialectName), rowMapper);
-    }
-
-    public static <T> SqlQuery<T> selectAll(Table table, DataSource dataSource, RowMapper<T> rowMapper)
-    {
-        return selectAll(table, dataSource, Dialect.getDefault(), rowMapper);
-    }
-
-    public static <T> SqlQuery<T> selectOne(Table table, DataSource dataSource, Dialect dialect, RowMapper<T> rowMapper)
-    {
-        return selectBuilder(table, dataSource, dialect, rowMapper).buildSelectOneAndCompile();
-    }
-
-    public static <T> SqlQuery<T> selectOne(Table table, DataSource dataSource, String dialectName, RowMapper<T> rowMapper)
-    {
-        return selectOne(table, dataSource, Dialect.forName(dialectName), rowMapper);
-    }
-
-    public static <T> SqlQuery<T> selectOne(Table table, DataSource dataSource, RowMapper<T> rowMapper)
-    {
-        return selectOne(table, dataSource, Dialect.getDefault(), rowMapper);
     }
 
     public static <T> SelectFromTableBuilder<T> selectBuilder(Table table, DataSource dataSource, Dialect dialect, RowMapper<T> rowMapper)
@@ -95,11 +69,6 @@ public class SqlOperations
         return insert(insert, dataSource, Dialect.getDefault());
     }
 
-    public static SimpleJdbcInsert insert(Table table, DataSource dataSource)
-    {
-        return insertBuilder(table, dataSource).buildAndCompile();
-    }
-
     public static InsertFromTableBuilder insertBuilder(Table table, DataSource dataSource)
     {
         return new InsertFromTableBuilder(table, dataSource);
@@ -118,21 +87,6 @@ public class SqlOperations
     public static SqlUpdate update(Update update, DataSource dataSource)
     {
         return update(update, dataSource, Dialect.getDefault());
-    }
-
-    public static SqlUpdate update(Table table, DataSource dataSource, Dialect dialect)
-    {
-        return updateBuilder(table, dataSource, dialect).buildAndCompile();
-    }
-
-    public static SqlUpdate update(Table table, DataSource dataSource, String dialectName)
-    {
-        return updateBuilder(table, dataSource, dialectName).buildAndCompile();
-    }
-
-    public static SqlUpdate update(Table table, DataSource dataSource)
-    {
-        return updateBuilder(table, dataSource).buildAndCompile();
     }
 
     public static UpdateFromTableBuilder updateBuilder(Table table, DataSource dataSource, Dialect dialect)
@@ -163,21 +117,6 @@ public class SqlOperations
     public static SqlUpdate delete(Delete delete, DataSource dataSource)
     {
         return delete(delete, dataSource, Dialect.getDefault());
-    }
-
-    public static SqlUpdate delete(Table table, DataSource dataSource, Dialect dialect)
-    {
-        return new DeleteFromTableBuilder(table, dataSource, dialect).buildAndCompile();
-    }
-
-    public static SqlUpdate delete(Table table, DataSource dataSource, String dialectName)
-    {
-        return delete(table, dataSource, Dialect.forName(dialectName));
-    }
-
-    public static SqlUpdate delete(Table table, DataSource dataSource)
-    {
-        return delete(table, dataSource, Dialect.getDefault());
     }
 
     public static DeleteFromTableBuilder deleteBuilder(Table table, DataSource dataSource, Dialect dialect)

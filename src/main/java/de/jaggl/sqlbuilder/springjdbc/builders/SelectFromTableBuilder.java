@@ -26,6 +26,11 @@ import de.jaggl.sqlbuilder.schema.Table;
 import de.jaggl.sqlbuilder.springjdbc.builders.utils.SingletonRowMapperSqlQuery;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 @RequiredArgsConstructor(access = PACKAGE)
 public class SelectFromTableBuilder<T>
 {

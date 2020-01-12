@@ -2,7 +2,7 @@ package de.jaggl.sqlbuilder.springjdbc.builders;
 
 import static de.jaggl.sqlbuilder.dialect.Dialects.MYSQL;
 import static de.jaggl.sqlbuilder.domain.Placeholder.placeholder;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.delete;
+import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.deleteOne;
 import static de.jaggl.sqlbuilder.springjdbc.builders.SqlOperations.deleteBuilder;
 import static java.lang.Boolean.TRUE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,10 +52,10 @@ public class DeleteFromTableBuilderTest
         var dataSource = getDataSourceMock();
 
         replayAll();
-        var delete = delete(TABLE, dataSource);
+        var delete = deleteOne(TABLE, dataSource);
         verifyAll();
 
-        assertThat(delete.getSql()).isEqualTo("DELETE FROM `schema`.`table` WHERE `schema`.`table`.`column1` = :column1");
+        assertThat(delete.sqlUpdate.getSql()).isEqualTo("DELETE FROM `schema`.`table` WHERE `schema`.`table`.`column1` = ?");
     }
 
     @Test
@@ -64,10 +64,10 @@ public class DeleteFromTableBuilderTest
         var dataSource = getDataSourceMock();
 
         replayAll();
-        var delete = delete(TABLE, dataSource, MYSQL);
+        var delete = deleteOne(TABLE, dataSource, MYSQL);
         verifyAll();
 
-        assertThat(delete.getSql()).isEqualTo("DELETE FROM `schema`.`table` WHERE `schema`.`table`.`column1` = :column1");
+        assertThat(delete.sqlUpdate.getSql()).isEqualTo("DELETE FROM `schema`.`table` WHERE `schema`.`table`.`column1` = ?");
     }
 
     @Test
@@ -76,10 +76,10 @@ public class DeleteFromTableBuilderTest
         var dataSource = getDataSourceMock();
 
         replayAll();
-        var delete = delete(TABLE, dataSource, "MYSQL");
+        var delete = deleteOne(TABLE, dataSource, "MYSQL");
         verifyAll();
 
-        assertThat(delete.getSql()).isEqualTo("DELETE FROM `schema`.`table` WHERE `schema`.`table`.`column1` = :column1");
+        assertThat(delete.sqlUpdate.getSql()).isEqualTo("DELETE FROM `schema`.`table` WHERE `schema`.`table`.`column1` = ?");
     }
 
     @Test
@@ -100,7 +100,7 @@ public class DeleteFromTableBuilderTest
         var dataSource = getDataSourceMock();
 
         replayAll();
-        assertThatThrownBy(() -> delete(TABLE3, dataSource)).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> deleteOne(TABLE3, dataSource)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("the table must exactly have 1 autoIncrement-column, but 0 were found");
         verifyAll();
     }
@@ -111,7 +111,7 @@ public class DeleteFromTableBuilderTest
         var dataSource = getDataSourceMock();
 
         replayAll();
-        assertThatThrownBy(() -> delete(TABLE2, dataSource, "MYSQL")).isInstanceOf(IllegalArgumentException.class)
+        assertThatThrownBy(() -> deleteOne(TABLE2, dataSource, "MYSQL")).isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("the table must exactly have 1 autoIncrement-column, but 2 were found");
         verifyAll();
     }

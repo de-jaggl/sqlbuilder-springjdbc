@@ -9,6 +9,11 @@ import javax.sql.DataSource;
 import de.jaggl.sqlbuilder.dialect.Dialect;
 import de.jaggl.sqlbuilder.queries.Update;
 
+/**
+ * @author Martin Schumacher
+ *
+ * @since 1.0.0
+ */
 public class UpdateFromUpdateBuilder extends UpdateFromQueryBuilder
 {
     private final Update update;

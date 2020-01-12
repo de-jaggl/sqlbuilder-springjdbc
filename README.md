@@ -22,62 +22,161 @@ A Java-Library that offers some support for easy combining the SQLbuilder-Core w
 <dependency>
   <groupId>de.jaggl.sqlbuilder</groupId>
   <artifactId>sqlbuilder-springjdbc</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 </dependency>
 ```
 
 ### Simple Example
 
+Consider haven the following domain-class Person (using the @Data-annotation from lombok, for a simpler, smaller example):
 ```java
-@Repository
-public class PersonRepository
+@Data
+@AllArgsConstructor
+public class Person
 {
-  private static final Table PERSONS = Table.create("persons");
-  private static final BigIntColumn ID = PERSONS.bigIntColumn("id").autoIncrement().build();
-  private static final VarCharColumn FORENAME = PERSONS.varCharColumn("forename").build();
-  private static final VarCharColumn LASTNAME = PERSONS.varCharColumn("lastname").build();
-
-  private SimpleJdbcInsert insert;
-  private SqlQuery update;
-  private SqlQuery delete;
-  private SqlQuery selectAll;
-  private SqlQuery selectOne;
-
-  @Autowired
-  private PersonMapper personMapper;
-
-  public PersonRepository(DataSource dataSource, PersonMapper personMapper)
-  {
-    insert = SqlOperations.insert(PERSONS, dataSource);
-    update = SqlOperations.update(PERSONS, dataSource);
-    delete = SqlOperations.delete(PERSONS, dataSource);
-    selectAll = SqlOperations.selectAll(PERSONS, dataSource, personMapper);
-    selectOne = SqlOperations.selectOne(PERSONS, dataSource, personMapper);
-  }
-
-  public void insert(Person person)
-  {
-    person.setId(insert.executeAndReturnKey(personMapper.getParams(person)));
-  }
-
-  public void update(Person person)
-  {
-    update.updateByNamedParam(personMapper.getParams(person));
-  }
-
-  public void delete(long personId)
-  {
-    return delete.update(personId);
-  }
-
-  public List<Person> getAll()
-  {
-    return selectAll.execute();
-  }
-
-  public Person getById(long id)
-  {
-    return selectOne.execute(id);
-  }
+    private long id;
+    private String forename;
+    private String lastname;
 }
 ```
+
+Then it is possible to implement a PersonMapper as follows:
+```java
+@Component
+public class PersonMapper implements RowMapperAndParamSource<Person>, KeySetter<Person>
+{
+    @Override
+    public Person mapRow(ResultSet rs, int rowNum) throws SQLException
+    {
+        return new Person(rs.getLong("id"), rs.getString("forename"), rs.getString("lastname"));
+    }
+
+    @Override
+    public Map<String, Object> getParams(Person person)
+    {
+        return Map.of("id", Long.valueOf(person.getId()), "forename", person.getForename(), "lastname", person.getLastname());
+    }
+
+    @Override
+    public void setKey(Person person, long key)
+    {
+        person.setId(key);
+    }
+}
+```
+
+Now you can simply implement a repository like this:
+```java
+@Repository
+public class PersonRepositoryWithSimpleOperations
+{
+    public static final Table PERSONS = Table.create("persons");
+
+    public static final BigIntColumn ID = PERSONS.bigIntColumn("id").autoIncrement().build();
+    public static final VarCharColumn FORENAME = PERSONS.varCharColumn("forename").build();
+    public static final VarCharColumn LASTNAME = PERSONS.varCharColumn("lastname").build();
+
+    private SimpleInsert<Person> insert;
+    private SimpleUpdate<Person> update;
+    private SimpleDeleteOne deleteOne;
+    private SimpleSelectOne<Person> selectOne;
+    private SimpleSelectAll<Person> selectAll;
+
+    public PersonRepositoryWithSimpleOperations(DataSource dataSource, PersonMapper personMapper)
+    {
+        insert = SimpleOperations.insert(PERSONS, dataSource, personMapper);
+        update = SimpleOperations.update(PERSONS, dataSource, personMapper);
+        deleteOne = SimpleOperations.deleteOne(PERSONS, dataSource);
+        selectOne = SimpleOperations.selectOne(PERSONS, dataSource, personMapper);
+        selectAll = SimpleOperations.selectAll(PERSONS, dataSource, personMapper);
+    }
+
+    public long insert(Person person)
+    {
+        return insert.execute(person);
+    }
+
+    public long update(Person person)
+    {
+        return update.execute(person);
+    }
+
+    public long delete(long personId)
+    {
+        return deleteOne.execute(personId);
+    }
+
+    public List<Person> getAll()
+    {
+        return selectAll.execute();
+    }
+
+    public Optional<Person> getById(long id)
+    {
+        return selectOne.execute(id);
+    }
+}
+```
+
+Another possibility is the following implementation:
+```java
+@Repository
+public class PersonRepositoryWithQueryExecutor
+{
+    public static final Table PERSONS = Table.create("persons");
+
+    public static final BigIntColumn ID = PERSONS.bigIntColumn("id").autoIncrement().build();
+    public static final VarCharColumn FORENAME = PERSONS.varCharColumn("forename").build();
+    public static final VarCharColumn LASTNAME = PERSONS.varCharColumn("lastname").build();
+
+    @Autowired
+    private PersonMapper personMapper;
+
+    private QueryExecutor queryExecutor;
+
+    public PersonRepositoryWithQueryExecutor(JdbcTemplate jdbcTemplate)
+    {
+        queryExecutor = new SpringJdbcQueryExecutor(jdbcTemplate);
+    }
+
+    public long insert(Person person)
+    {
+        return Queries.insertInto(PERSONS)
+                .set(FORENAME, person.getForename())
+                .set(LASTNAME, person.getLastname())
+                .executeAndReturnKey(queryExecutor);
+    }
+
+    public long update(Person person)
+    {
+        return Queries.update(PERSONS)
+                .set(FORENAME, person.getForename())
+                .set(LASTNAME, person.getLastname())
+                .execute(queryExecutor);
+    }
+
+    public long delete(long personId)
+    {
+        return Queries.deleteFrom(PERSONS)
+                .where(ID.eq(personId))
+                .execute(queryExecutor);
+    }
+
+    public List<Person> getAll()
+    {
+        return Queries.select()
+                .from(PERSONS)
+                .query(queryExecutor.select(personMapper));
+    }
+
+    public Optional<Person> getById(long id)
+    {
+        return Queries.select()
+                .from(PERSONS)
+                .where(ID.eq(id))
+                .queryOne(queryExecutor.select(personMapper));
+    }
+}
+```
+
+It is up to you, which implementation you use. The first example is the simpler one, which covers the default CRUD-methods and default select-methods. It assumes, that you are using a very standard domain-class with, for example, an identifier from type long. For more generic use, the second approach maybe the better one.
