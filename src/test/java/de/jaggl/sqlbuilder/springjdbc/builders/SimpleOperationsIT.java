@@ -98,7 +98,7 @@ class SimpleOperationsIT
 
         assertThat(deleteOne.execute(person.getId())).isEqualTo(1);
 
-        assertThat(selectOne.execute(person.getId())).isNull();
+        assertThat(selectOne.execute(person.getId())).isEmpty();
 
         assertThat(selectAll.execute()).isEmpty();
     }
