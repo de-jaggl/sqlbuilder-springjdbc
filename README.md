@@ -22,7 +22,7 @@ A Java-Library that offers some support for easy combining the SQLbuilder-Core w
 <dependency>
   <groupId>de.jaggl.sqlbuilder</groupId>
   <artifactId>sqlbuilder-springjdbc</artifactId>
-  <version>1.1.1</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -96,6 +96,11 @@ public class PersonRepositoryWithSimpleOperations
         return insert.execute(person);
     }
 
+    public long[] insert(List<Person> persons)
+    {
+        return insert.execute(persons);
+    }
+
     public long update(Person person)
     {
         return update.execute(person);
@@ -118,7 +123,25 @@ public class PersonRepositoryWithSimpleOperations
 }
 ```
 
-Another possibility is the following implementation:
+The example above is already implemented in a the default impmlementation `SimpleJdbcRepository`, so it is only necessary to extend it as follows:
+```java
+@Repository
+public class JdbcPersonRepository extends SimpleJdbcRepository<Person>
+{
+    public static final Table PERSONS = Table.create("persons");
+
+    public static final BigIntColumn ID = PERSONS.bigIntColumn("id").autoIncrement().build();
+    public static final VarCharColumn FORENAME = PERSONS.varCharColumn("forename").build();
+    public static final VarCharColumn LASTNAME = PERSONS.varCharColumn("lastname").build();
+
+    public JdbcPersonRepository(DataSource dataSource, PersonMapper personMapper)
+    {
+        super(PERSONS, dataSource, personMapper);
+    }
+}
+```
+
+Another possibility is to use the `QueryExecutor` like the following example:
 ```java
 @Repository
 public class PersonRepositoryWithQueryExecutor
