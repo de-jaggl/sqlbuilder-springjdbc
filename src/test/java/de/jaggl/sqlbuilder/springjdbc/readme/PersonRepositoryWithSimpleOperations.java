@@ -46,6 +46,11 @@ public class PersonRepositoryWithSimpleOperations
         return insert.execute(person);
     }
 
+    public long[] insert(List<Person> persons)
+    {
+        return insert.execute(persons);
+    }
+
     public long update(Person person)
     {
         return update.execute(person);

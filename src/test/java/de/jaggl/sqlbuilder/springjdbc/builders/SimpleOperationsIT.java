@@ -1,20 +1,15 @@
 package de.jaggl.sqlbuilder.springjdbc.builders;
 
-import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.deleteOne;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.insert;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.selectAll;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.selectOne;
-import static de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperations.update;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +28,7 @@ import de.jaggl.sqlbuilder.springjdbc.builders.SimpleOperationsIT.TestConfigurat
 import de.jaggl.sqlbuilder.springjdbc.builders.utils.KeySetter;
 import de.jaggl.sqlbuilder.springjdbc.builders.utils.RowMapperAndParamSource;
 import de.jaggl.sqlbuilder.springjdbc.queryexecutors.SpringJdbcQueryExecutor;
+import de.jaggl.sqlbuilder.springjdbc.repository.SimpleJdbcRepository;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -47,60 +43,46 @@ class SimpleOperationsIT
     protected static final VarCharColumn FORENAME = TABLE.varCharColumn("forename").size(20).build();
     protected static final VarCharColumn LASTNAME = TABLE.varCharColumn("lastname").size(20).build();
 
-    private SimpleInsert<Person> insert;
-    private SimpleUpdate<Person> update;
-    private SimpleDeleteOne deleteOne;
-
-    private SimpleSelectOne<Person> selectOne;
-    private SimpleSelectAll<Person> selectAll;
-
     @Autowired
     private DataSource dataSource;
 
     @Autowired
-    private PersonMapper personMapper;
-
-    @BeforeEach
-    void setUp()
-    {
-        insert = insert(TABLE, dataSource, personMapper);
-        update = update(TABLE, dataSource, personMapper);
-        deleteOne = deleteOne(TABLE, dataSource);
-
-        selectOne = selectOne(TABLE, dataSource, personMapper);
-        selectAll = selectAll(TABLE, dataSource, personMapper);
-    }
+    private SimpleJdbcRepository<Person> personRepository;
 
     @Test
     void testAll()
     {
         TABLE.buildCreateTable().execute(new SpringJdbcQueryExecutor(new JdbcTemplate(dataSource)));
 
-        assertThat(selectAll.execute()).isEmpty();
+        assertThat(personRepository.getAll()).isEmpty();
 
         var person = new Person(0, "Martin", "Schumacher");
-        var result = insert.execute(person);
+        var result = personRepository.insert(person);
         assertThat(person.getId()).isPositive().isEqualTo(result);
 
-        person = selectOne.execute(person.getId()).orElse(null);
+        person = personRepository.getById(person.getId()).orElse(null);
         assertThat(person.getForename()).isEqualTo("Martin");
         assertThat(person.getLastname()).isEqualTo("Schumacher");
 
-        assertThat(selectAll.execute()).hasSize(1);
+        assertThat(personRepository.getAll()).hasSize(1);
 
         person.setForename("Jonas Martin");
 
-        assertThat(update.execute(person)).isEqualTo(1);
+        assertThat(personRepository.update(person)).isOne();
 
-        person = selectOne.execute(person.getId()).orElse(null);
+        person = personRepository.getById(person.getId()).orElse(null);
         assertThat(person.getForename()).isEqualTo("Jonas Martin");
         assertThat(person.getLastname()).isEqualTo("Schumacher");
 
-        assertThat(deleteOne.execute(person.getId())).isEqualTo(1);
+        assertThat(personRepository.delete(person.getId())).isEqualTo(1);
 
-        assertThat(selectOne.execute(person.getId())).isEmpty();
+        assertThat(personRepository.getById(person.getId())).isEmpty();
 
-        assertThat(selectAll.execute()).isEmpty();
+        assertThat(personRepository.getAll()).isEmpty();
+
+        assertThat(personRepository.insert(List.of(new Person(0, "Martin", "Schumacher"), new Person(0, "Jonas Martin", "Schumacher")))).containsExactly(1, 1);
+
+        assertThat(personRepository.getAll()).hasSize(2);
     }
 
     @Data
@@ -160,6 +142,12 @@ class SimpleOperationsIT
                     .username("root")
                     .password(password)
                     .build();
+        }
+
+        @Bean
+        public SimpleJdbcRepository<Person> personRepository()
+        {
+            return new SimpleJdbcRepository<>(TABLE, dataSource(), personMapper());
         }
 
         @Bean
