@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.sql.DataSource;
 
+import de.jaggl.sqlbuilder.dialect.Dialect;
 import de.jaggl.sqlbuilder.schema.Table;
 import de.jaggl.sqlbuilder.springjdbc.builders.SimpleDeleteOne;
 import de.jaggl.sqlbuilder.springjdbc.builders.SimpleInsert;
@@ -27,13 +28,23 @@ public class SimpleJdbcRepository<T>
     private SimpleSelectOne<T> selectOne;
     private SimpleSelectAll<T> selectAll;
 
-    public SimpleJdbcRepository(Table table, DataSource dataSource, RowMapperAndParamSource<T> personMapper)
+    public SimpleJdbcRepository(Table table, DataSource dataSource, RowMapperAndParamSource<T> rowMapper, Dialect dialect)
     {
-        insert = SimpleOperations.insert(table, dataSource, personMapper);
-        update = SimpleOperations.update(table, dataSource, personMapper);
-        deleteOne = SimpleOperations.deleteOne(table, dataSource);
-        selectOne = SimpleOperations.selectOne(table, dataSource, personMapper);
-        selectAll = SimpleOperations.selectAll(table, dataSource, personMapper);
+        insert = SimpleOperations.insert(table, dataSource, rowMapper);
+        update = SimpleOperations.update(table, dataSource, dialect, rowMapper);
+        deleteOne = SimpleOperations.deleteOne(table, dataSource, dialect);
+        selectOne = SimpleOperations.selectOne(table, dataSource, dialect, rowMapper);
+        selectAll = SimpleOperations.selectAll(table, dataSource, dialect, rowMapper);
+    }
+
+    public SimpleJdbcRepository(Table table, DataSource dataSource, RowMapperAndParamSource<T> rowMapper, String dialectName)
+    {
+        this(table, dataSource, rowMapper, Dialect.forName(dialectName));
+    }
+
+    public SimpleJdbcRepository(Table table, DataSource dataSource, RowMapperAndParamSource<T> rowMapper)
+    {
+        this(table, dataSource, rowMapper, Dialect.getDefault());
     }
 
     public long insert(T data)

@@ -22,7 +22,7 @@ A Java-Library that offers some support for easy combining the SQLbuilder-Core w
 <dependency>
   <groupId>de.jaggl.sqlbuilder</groupId>
   <artifactId>sqlbuilder-springjdbc</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
 </dependency>
 ```
 
